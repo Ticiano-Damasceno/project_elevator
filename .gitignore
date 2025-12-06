@@ -1,0 +1,82 @@
+# ========================
+
+# GERAL
+
+# ========================
+
+.env
+.env.*
+!.env.example
+logs/
+*.log
+
+# ========================
+
+# PYTHON (FastAPI)
+
+# ========================
+
+**pycache**/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+dist/
+build/
+
+# ========================
+
+# NODE / FASTIFY / REACT
+
+# ========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build React
+
+frontend/build/
+frontend/dist/
+
+# ========================
+
+# TYPESCRIPT
+
+# ========================
+
+*.tsbuildinfo
+
+# ========================
+
+# DOCKER
+
+# ========================
+
+*.tar
+docker-data/
+
+# ========================
+
+# IDEs
+
+# ========================
+
+.vscode/
+.idea/
+*.swp
+
+# ========================
+
+# SISTEMA OPERACIONAL
+
+# ========================
+
+.DS_Store
+Thumbs.db
+desktop.ini
