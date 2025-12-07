@@ -16,7 +16,7 @@ class Elevator:
         self.calls: List[int] = []
         self._running = False
 
-    def add_call(self, floor: int) -> None:
+    async def add_call(self, floor: int) -> None:
         async with self._lock:
             if floor not in self.calls and floor != self.state.localidade:
                 self.calls.append(floor)

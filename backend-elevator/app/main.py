@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
 
-from elevator import Elevator
+from app.elevator import Elevator
 
 load_dotenv()
 REDIS_URL = os.getenv("REDIS_URL", "redis://172.17.144.1:6379")
@@ -101,4 +101,3 @@ async def websocket_endpoint(ws: WebSocket):
         await pubsub.unsubscribe(ELEVATOR_CHANNEL)
         await r.close()
         await ws.close()
-            
