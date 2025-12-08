@@ -6,11 +6,15 @@ from fastapi import FastAPI, WebSocket, HTTPException
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
-
+from app.get_docker_ip import get_docker_ip
+from app.verify_redis import check_redis
 from app.elevator import Elevator
 
 load_dotenv()
-REDIS_URL = os.getenv("REDIS_URL", "redis://172.17.144.1:6379")
+ip = get_docker_ip()
+check_redis(ip)
+REDIS_URL = os.getenv("REDIS_URL", f"redis://{ip}:6379")
+
 
 ELEVATOR_CHANNEL = "elevator:events"
 DOORS_COMMAND_CHANNEL = "doors:commands"
