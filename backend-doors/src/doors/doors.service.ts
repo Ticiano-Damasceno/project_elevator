@@ -1,5 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
+import { RedisProvider } from 'src/redis/redis.provider';
+import { Redis } from 'ioredis';
+import { getDokcerIp } from '../utils/getDockerIp';
 
 export type DoorStatus = 'transição' | 'aberta' | 'fechada';
 
@@ -11,15 +14,37 @@ export interface DoorState {
 @Injectable()
 export class DoorsService implements OnModuleInit {
     private doors: DoorState[] = [];
+    private redisPub: Redis;
+    private redisSub: Redis;
+    private ip: string;
 
-    constructor(private redisService: RedisService){
+    constructor(private redisService: RedisService, private redis: RedisProvider){
+        this.ip = getDokcerIp();
+
+        this.redisPub = new Redis({ host: this.ip, port: 6379 });
+        this.redisSub = new Redis({ host: this.ip, port: 6379 });
+        
         for (let i=0;i<=7;i++){
             this.doors.push({
                 localidade: i,
                 status: 'fechada',
             });
         }
+
+        this.redis.subscribe('elevator-state', (state) =>{
+            this.handleElevatorState(state);
+        })
     };
+
+    async handleElevatorState(state: any){
+        const { floor, status } = state;
+
+        console.log('Elevator state received:', state);
+
+        if(status === 'parado'){
+            await this.openCloseDoor(floor);
+        }
+    }
 
     async onModuleInit() {
         const redis = this.redisService.getClient();
@@ -35,8 +60,47 @@ export class DoorsService implements OnModuleInit {
                 await this.openCloseDoor(floor);
             }
         });
-
         console.log('Backend-doors inscrito no canal doors:commands');
+
+
+        this.redisSub.subscribe('doors:commands', (err)=> {
+            if (err) console.error('Subscribe error:', err);
+            else console.log('Backend-doors inscrito no canal elevator:commands');
+        });
+
+        this.redisSub.on('message', (channel, message) => {
+            console.log(`Recebido do elevador no canal ${channel}:`, message);
+            this.handleElevatorCommand(message);
+        });
+
+    }
+
+    private async handleElevatorCommand(message: string) {
+        let data: any;
+
+        try {
+            data = JSON.parse(message);
+        } catch (err) {
+            console.log('JSON inválido:', message);
+            return;
+        }
+        
+        
+        const { type, floor, } = data;
+
+        if(typeof floor !== 'number'){
+            console.log('Andar inválido recebido:', data);
+            return;
+        }
+
+        switch(type){
+            case 'open':
+                await this.openCloseDoor(floor);
+                break;
+            case 'close':
+                await this.closeDoor(floor);
+                break;
+        }
     }
 
     getAllDoors(){
@@ -49,6 +113,22 @@ export class DoorsService implements OnModuleInit {
 
     private wait(ms:number){
         return new Promise(resolve => setTimeout(resolve,ms));
+    }
+
+    async emitElevatorCall(floor: number){
+        await this.redis.publish(
+            'elevator:commands',
+            JSON.stringify({
+                type: 'call',
+                floor,
+                source: 'door',
+            })
+        );
+    }
+
+    async pressButton(floor: number){
+        console.log(`Button pressed at floor ${floor}. Calling elevator...`);
+        await this.emitElevatorCall(floor);
     }
 
     async openDoor(floor:number){

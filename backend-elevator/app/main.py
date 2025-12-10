@@ -44,7 +44,14 @@ async def on_elevator_stop(floor:int):
         }
     )
 
-    await publish(DOORS_COMMAND_CHANNEL, f'open:{floor}')
+    await publish(
+        DOORS_COMMAND_CHANNEL, 
+        {
+            'type': 'open',
+            'floor': floor,
+            'source': 'elevator'
+        }
+    )
 
 @app.post('/call/{floor}')
 async def call_elevator(floor: int):

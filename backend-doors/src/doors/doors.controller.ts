@@ -36,4 +36,10 @@ export class DoorsController {
     async openClose(@Body() dto: openCloseDoorDto){
         return this.doorsService.openCloseDoor(dto.doorId);
     }
+
+    @Post(':floor/button')
+    pressButton(@Param('floor') floor: string){
+        return this.doorsService.pressButton(Number(floor));
+    }
+
 }

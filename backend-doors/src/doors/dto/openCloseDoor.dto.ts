@@ -1,3 +1,3 @@
 export class openCloseDoorDto{
-    doorId: Number;
+    doorId: number;
 }
