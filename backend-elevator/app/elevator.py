@@ -20,8 +20,6 @@ class Elevator:
         async with self._lock:
             if floor not in self.calls and floor != self.state.localidade:
                 self.calls.append(floor)
-            if floor == self.state.localidade and self.state.status == 'parado':
-                print('solicita abertura da porta')
 
     async def up(self):
         if self.state.localidade == 7:
@@ -44,7 +42,7 @@ class Elevator:
             return None
         return min(self.calls, key = lambda x: abs(x - self.state.localidade))
 
-    async def run(self, on_stop_callback):
+    async def run(self, on_stop_callback, can_elevator_move):
         if self._running:
             return
         self._running = True
@@ -53,6 +51,10 @@ class Elevator:
                 next_floor = self._next_near_floor()
             if next_floor is None:
                 break
+
+            if not await can_elevator_move(self.state.localidade):
+                await asyncio.sleep(1)
+                continue
 
             if next_floor == self.state.localidade:
                 self.calls.remove(next_floor)

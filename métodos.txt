@@ -1,0 +1,12 @@
+GET:
+doors localhost:3000/doors
+doors localhost:3000/doors/:floor
+elevator localhost:3000/status
+
+POST:
+doors localhost:3000/doors/open/:floor
+doors localhost:3000/doors/close/:floor
+doors localhost:3000/doors/openCloseDoor/:floor
+doors localhost:3000/doors/openClose body:{"doorId": :floor}
+doors localhost:3000/doors/button/:floor
+elevator localhost:8000/call/:floor

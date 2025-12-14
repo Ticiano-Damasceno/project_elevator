@@ -1,10 +1,10 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { createClient, RedisClientType } from 'redis';
+import { createClient } from 'redis';
 import { getDokcerIp } from '../utils/getDockerIp';
 
 @Injectable()
 export class RedisService implements OnModuleInit,OnModuleDestroy{
-    private client ;
+    private client: any;
 
     async onModuleInit(){
         const ip = getDokcerIp();
