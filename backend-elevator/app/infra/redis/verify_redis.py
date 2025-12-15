@@ -20,11 +20,12 @@ def start_redis() -> None:
         print('Redis iniciado via Docker.')
 
 
-def check_redis(ip:str):
+def check_redis(ip:str) -> bool:
     client = redis.Redis(host=ip, port=6379)
     try:
         if client.ping():
             print("Redis está rodando ✅")
+            return True
     except redis.exceptions.ConnectionError:
         print("Redis não está rodando. Subindo via Docker...")
         start_redis()

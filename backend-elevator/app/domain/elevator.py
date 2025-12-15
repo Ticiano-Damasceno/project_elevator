@@ -16,6 +16,13 @@ class Elevator:
         self.calls: List[int] = []
         self._running = False
 
+    def get_status(self) -> dict:
+        return {
+            'status': self.state.status,
+            'locate': self.state.localidade,
+            'calls': self.calls
+        }
+
     async def add_call(self, floor: int) -> None:
         async with self._lock:
             if floor not in self.calls and floor != self.state.localidade:
@@ -52,15 +59,16 @@ class Elevator:
             if next_floor is None:
                 break
 
-            if not await can_elevator_move(self.state.localidade):
-                await asyncio.sleep(1)
-                continue
+            # print(can_elevator_move(self.state.localidade))
+            # if not await can_elevator_move(self.state.localidade):
+            #     await asyncio.sleep(1)
+            #     continue
 
-            if next_floor == self.state.localidade:
-                self.calls.remove(next_floor)
-                self.state.status = 'parado'
-                await on_stop_callback(self.state.localidade)
-                continue
+            # if next_floor == self.state.localidade:
+            #     self.calls.remove(next_floor)
+            #     self.state.status = 'parado'
+            #     await on_stop_callback(self.state.localidade)
+            #     continue
 
             if next_floor > self.state.localidade:
                 await self.up()
