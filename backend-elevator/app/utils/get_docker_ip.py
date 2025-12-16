@@ -1,7 +1,17 @@
 import subprocess
 
 def get_docker_ip() -> str:
-    wsl = subprocess.run(['wsl', 'ip', 'addr'], capture_output=True, text=True)
-    lista = [x.strip() for x in wsl.stdout.split('\n')]
-    ip = [x for x in lista if 'inet' in x and 'global eth0' in x][0].split(' ')[1].replace('/20','')
-    return ip
+    result = subprocess.run(
+        ["wsl", "ip", "-4", "addr", "show", "eth0"],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+ 
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if line.startswith("inet "):
+            return line.split()[1].split("/")[0]
+ 
+    raise RuntimeError("Docker IP not found")
+ 

@@ -8,13 +8,14 @@ class ElevatorState(BaseModel):
     status: Status = 'parado'
     localidade: int = 0
 
-
 class Elevator:
     def __init__(self) -> None:
         self.state = ElevatorState()
-        self._lock = asyncio.Lock()
+        self.__lock = asyncio.Lock()
         self.calls: List[int] = []
-        self._running = False
+        self.__running_task = None
+        self.hold_event = asyncio.Event()
+        self.hold_event.set()
 
     def get_status(self) -> dict:
         return {
@@ -24,9 +25,14 @@ class Elevator:
         }
 
     async def add_call(self, floor: int) -> None:
-        async with self._lock:
-            if floor not in self.calls and floor != self.state.localidade:
+        async with self.__lock:
+            if floor not in self.calls:
                 self.calls.append(floor)
+
+    async def remove_call(self, floor: int) -> None:
+        async with self.__lock:
+            if floor in self.calls:
+                self.calls.remove(floor)
 
     async def up(self):
         if self.state.localidade == 7:
@@ -44,40 +50,21 @@ class Elevator:
         await asyncio.sleep(3)
         self.state.localidade -= 1
 
-    def _next_near_floor(self) -> Optional[int]:
+    def next_floor(self) -> Optional[int]:
+        current = self.state.localidade
+        upper = sorted(f for f in self.calls if f > current)
+        downner = sorted(f for f in self.calls if f < current)
         if not self.calls:
             return None
-        return min(self.calls, key = lambda x: abs(x - self.state.localidade))
+        if self.state.status == 'subindo' and upper:
+            return upper[0]
+        elif self.state.status == 'descendo' and downner:
+            return downner[0]
 
-    async def run(self, on_stop_callback, can_elevator_move):
-        if self._running:
-            return
-        self._running = True
-        while self.calls:
-            async with self._lock:
-                next_floor = self._next_near_floor()
-            if next_floor is None:
-                break
+        return min(self.calls, key=lambda f: abs(f-current))
 
-            # print(can_elevator_move(self.state.localidade))
-            # if not await can_elevator_move(self.state.localidade):
-            #     await asyncio.sleep(1)
-            #     continue
+    def get_running(self) -> bool:
+        return self.__running_task is not None and not self.__running_task.done()
 
-            # if next_floor == self.state.localidade:
-            #     self.calls.remove(next_floor)
-            #     self.state.status = 'parado'
-            #     await on_stop_callback(self.state.localidade)
-            #     continue
-
-            if next_floor > self.state.localidade:
-                await self.up()
-            elif next_floor < self.state.localidade:
-                await self.down()
-            if self.state.localidade in self.calls:
-                self.calls.remove(self.state.localidade)
-                self.state.status = 'parado'
-                await on_stop_callback(self.state.localidade)
-
-        self.state.status = 'parado'
-        self._running = False
+    def set_task(self, task):
+        self.__running_task = task

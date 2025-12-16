@@ -79,17 +79,13 @@ export class DoorsService implements OnModuleInit {
     async pressButton(floor: number){
         console.log(`Button pressed at floor ${floor}. Calling elevator...`);
         await this.emitElevatorCall(floor);
+        return { ok: true, "message": `Solicitado o elevador para o andar ${floor}` };
     }
 
     async openDoor(floor:number){
         const door = this.doors[floor];
         if(!door) return;
         if (door.status === 'aberta' || door.status === 'transição') return;
-        console.log(`Porta ${floor}: iniciando abertura...`);
-        door.status = 'transição';
-        await this.wait(2000);
-        door.status = 'aberta';
-        console.log(`Porta ${floor}: aberta.`);
         await this.redis.publish(
             'doors:events',
             {
@@ -98,6 +94,11 @@ export class DoorsService implements OnModuleInit {
                 source: 'door'
             }
         );
+        console.log(`Porta ${floor}: iniciando abertura...`);
+        door.status = 'transição';
+        await this.wait(2000);
+        door.status = 'aberta';
+        console.log(`Porta ${floor}: aberta.`);
     }
 
     async closeDoor(floor:number){

@@ -1,12 +1,9 @@
 import subprocess
 import redis
 
-def start_redis() -> None:
+def start_redis() -> bool:
     try:
-        subprocess.run(
-            ['docker','start','redis'],
-            check=True
-        )
+        subprocess.run(['docker','start','redis'],check=True)
     except:
         subprocess.run(
             ['docker', 
@@ -23,10 +20,11 @@ def start_redis() -> None:
 def check_redis(ip:str) -> bool:
     client = redis.Redis(host=ip, port=6379)
     try:
-        if client.ping():
-            print("Redis está rodando ✅")
-            return True
+        client.ping()
+        print("Redis está rodando ✅")
+        return True
     except redis.exceptions.ConnectionError:
         print("Redis não está rodando. Subindo via Docker...")
         start_redis()
+        return True
 
