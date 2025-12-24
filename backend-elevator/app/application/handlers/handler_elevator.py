@@ -20,7 +20,9 @@ async def run_elevator(request: any):
         return {"status": "already running"}
 
     async def worker():
-        while elevator.calls:
+        while True:
+            if not elevator.calls:
+                break
             await asyncio.sleep(0.1)
             await elevator.hold_event.wait()
             next_floor = elevator.next_floor()
@@ -31,47 +33,49 @@ async def run_elevator(request: any):
                 await publish(
                     redis_client,
                     elevator_event_channel,
-                    json.dumps({
+                    {
                         'type': 'queue',
                         'status': 'subindo',
                         'floor': elevator.state.localidade
-                    })
+                    }
                 )
                 await elevator.up()
             elif next_floor < elevator.state.localidade:
                 await publish(
                     redis_client,
                     elevator_event_channel,
-                    json.dumps({
+                    {
                         'type': 'queue',
                         'status': 'descendo',
                         'floor': elevator.state.localidade
-                    })
+                    }
                 )
                 await elevator.down()
             if elevator.state.localidade in elevator.calls:
-                elevator.remove_call(elevator.state.localidade)
-                elevator.state.status = 'parado'
+                await elevator.hold_event.wait()
+                await elevator.remove_call(elevator.state.localidade)
+                print('Elevador parado no andar', elevator.state.localidade)
+                elevator.set_status_stop()
                 await publish(
                     redis_client,
                     elevator_event_channel,
-                    json.dumps({
+                    {
                         'type': 'stop',
                         'status': 'parado',
                         'floor': elevator.state.localidade
-                    })
+                    }
                 )
                 await publish(
                     redis_client,
                     'doors:commands',
-                    json.dumps({
+                    {
                         'type': 'open',
                         'floor': elevator.state.localidade
-                    })
+                    }
                 )
 
-        print('Elevador parado no andar', elevator.state.localidade)
-        elevator.state.status = 'parado'
+        
+        elevator.set_status_stop()
     
     task = create_task(worker())
     elevator.set_task(task)

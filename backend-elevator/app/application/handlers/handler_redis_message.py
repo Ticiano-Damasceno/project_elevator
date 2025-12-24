@@ -12,23 +12,27 @@ async def handler_redis_message(app:FastAPI, data: dict, channel: str):
 
     if data.get('type') == 'call':
         floor = data.get('floor')
+        print('Recebido solicitação da porta:', data)
         if floor not in elevator.calls:
+            await elevator.add_call(floor)
+            print(elevator.calls)
             if not elevator.get_running():
-                await elevator.add_call(floor)
                 asyncio.create_task(run_elevator(app))
 
         await publish(
             redis_client,
             channel,
-            json.dumps({
+            {
                 'type': channel,
                 'status': elevator.state.status,
                 'floor': elevator.state.localidade
-            })
+            }
         )
     if data.get('source') == 'door':
         if data.get('type') == 'aberta':
             elevator.hold_event.clear()
+            print('porta aberta')
         elif data.get('type') == 'fechada':
             elevator.hold_event.set()
+            print('porta fechada')
     

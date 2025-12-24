@@ -17,7 +17,6 @@ async def redis_listener(app: FastAPI, channel: str):
                 )
                 if msg:
                     data = json.loads(msg['data'])
-                    
                     channel_name = msg['channel']
                     if isinstance(channel_name, bytes):
                         channel_name = channel_name.decode()

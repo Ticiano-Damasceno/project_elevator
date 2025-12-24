@@ -66,5 +66,8 @@ class Elevator:
     def get_running(self) -> bool:
         return self.__running_task is not None and not self.__running_task.done()
 
-    def set_task(self, task):
+    def set_task(self, task) -> None:
         self.__running_task = task
+
+    def set_status_stop(self) -> None:
+        self.state.status = 'parado'

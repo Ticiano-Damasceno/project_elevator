@@ -25,7 +25,6 @@ export class DoorsService implements OnModuleInit {
     async onModuleInit() {
         const redis = this.redisService.getClient();
         redis.subscribe('doors:commands', (message: any) => {
-            console.log('Mensagem recebida do elevador:', message);
             this.handleElevatorCommand(message);
         });
     }
@@ -77,7 +76,7 @@ export class DoorsService implements OnModuleInit {
     }
 
     async pressButton(floor: number){
-        console.log(`Button pressed at floor ${floor}. Calling elevator...`);
+        console.log(`Botão pressionado no andar ${floor}. Chamando o elevador...`);
         await this.emitElevatorCall(floor);
         return { ok: true, "message": `Solicitado o elevador para o andar ${floor}` };
     }
