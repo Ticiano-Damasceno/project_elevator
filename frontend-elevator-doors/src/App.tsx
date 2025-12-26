@@ -1,54 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
+import { getElevatorStatus } from "./api/elevator";
+import { getDoors } from "./api/doors";
+import { Elevator } from "./components/Elevator";
+import { Door } from "./components/Door";
+import { ElevatorPanel } from "./components/ElevatorPanel";
+import './styles/global.css'
 
-type ElevatorStatus = {
-  status: string;
-  locate: number;
-  calls: number[];
-};
+export default function App() {
+  const [elevator, setElevator] = useState<any>(null)
+  const [doors, setDoors] = useState<any[]>([])
 
-const API_URL_ELEVATOR = 'http://localhost:8000';
-const floor_list = [0,1,2,3,4,5,6,7];
+  useEffect(() =>{
+    const interval = setInterval(async () => {
+      setElevator(await getElevatorStatus())
+      setDoors(await getDoors())
+    }, 1000)
 
-function App() {
-  const [status, setStatus] = useState<ElevatorStatus | null>(null);
+    return () => clearInterval(interval)
+  }, [])
 
-  async function loadStatus(): Promise<void> {
-    const res = await fetch(`${API_URL_ELEVATOR}/elevator/status`);
-    const data: ElevatorStatus = await res.json();
-    setStatus(data);
-  }
-
-  async function callElevator(floor: number): Promise<void> {
-    await fetch(`${API_URL_ELEVATOR}/elevator/call/${floor}`,
-      { method: 'POST', }
-    );
-  };
-
-  useEffect(() => {
-    loadStatus();
-    const timer = setInterval(loadStatus, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  if (!status) return <p>Loading...</p>
+  if (!elevator) return null
 
   return (
-    <>
-      <h2 className="app">Elevador</h2>
-      <div className="status">
-        <p><b>Status: </b>{status.status}</p>
-        <p><b>Andar: </b>{status.locate}</p>
-        <p><b>Fila: </b>{status.calls.join(', ') || 'vazia'}</p>
+    <div style={{ display: 'flex', gap: 40 }} >
+      <Elevator floor={elevator.locate} status={elevator.status} />
+      <ElevatorPanel floors={[0,1,2,3,4,5,6,7]} />
+      <div>
+        {doors.map(d => (
+          <Door
+            key = {d.localidade}
+            floor = {d.localidade}
+            status = {d.status}
+          />
+        ))}
       </div>
-      <div className="floors">
-        {
-          floor_list.map((floor)=>{
-            return <button key={floor} onClick={()=>callElevator(floor)} >{floor}</button>
-          })
-        }
-      </div>
-    </>
+    </div>
   )
 }
-
-export default App

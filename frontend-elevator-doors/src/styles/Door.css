@@ -1,0 +1,44 @@
+.door {
+    background: #0f2a4d;
+    border: 2px solid #1e4a7a;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    width: 95%;
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: center;
+    align-content: center;
+    transition: background-color 1.5s ease, border-color 1.5s ease;
+}
+
+.door.open {
+    background: #123d2a;
+    border-color: #3fae7a;
+}
+
+.door-status {
+    margin: 6px 0px;
+    font-size: 14px;
+    color: white;
+    transition: color 1.5s ease;
+}
+
+.door.open .door-status {
+    color: #7fffd4;
+}
+
+.door button {
+    background: #1e6bb8;
+    color: #e6f0ff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.door button:hover{
+    background: #2a84e0;
+}

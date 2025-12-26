@@ -1,0 +1,24 @@
+.panel {
+    height: 100%;
+    background: #0b2342;
+    border: 2px solid #1e4a7a;
+    border-radius: 8px;
+    padding: 10px;
+    width: 120px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.panel button {
+    background: #163a6b;
+    color: #e6f0ff;
+    border: 1px solid #2a6fb0;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.panel button:hover{
+    background: #1f5fa0;
+}
