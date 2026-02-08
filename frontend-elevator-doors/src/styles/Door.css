@@ -4,7 +4,7 @@
     border-radius: 8px;
     padding: 12px;
     margin-bottom: 10px;
-    width: 95%;
+    width: 220px;
     text-align: center;
     display: flex;
     flex-direction: row;
@@ -22,7 +22,7 @@
 .door-status {
     margin: 6px 0px;
     font-size: 14px;
-    color: white;
+    color: #e6f0ff;
     transition: color 1.5s ease;
 }
 
@@ -30,13 +30,21 @@
     color: #7fffd4;
 }
 
-.door button {
+.door-button {
     background: #1e6bb8;
     color: #e6f0ff;
     border: none;
     border-radius: 4px;
     padding: 6px 10px;
     cursor: pointer;
+}
+
+.door-button.ligado{
+    background: #e6f0ff;
+    color: #0f2a4d;
+}
+.door-button.ligado:hover{
+    background: #ffffff;
 }
 
 .door button:hover{

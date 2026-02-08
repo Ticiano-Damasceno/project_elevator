@@ -11,8 +11,8 @@ class ElevatorState(BaseModel):
 class Elevator:
     def __init__(self) -> None:
         self.state = ElevatorState()
-        self.__lock = asyncio.Lock()
         self.calls: List[int] = []
+        self.__lock = asyncio.Lock()
         self.__running_task = None
         self.hold_event = asyncio.Event()
         self.hold_event.set()
@@ -24,10 +24,11 @@ class Elevator:
             'calls': self.calls
         }
 
-    async def add_call(self, floor: int) -> None:
+    async def add_call(self, floor: int, source: str) -> None:
         async with self.__lock:
+            call = {'floor': floor, 'source': source}
             if floor not in self.calls:
-                self.calls.append(floor)
+                self.calls.append(call)
 
     async def remove_call(self, floor: int) -> None:
         async with self.__lock:

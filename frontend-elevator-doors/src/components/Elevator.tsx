@@ -6,8 +6,8 @@ type Props = {
 }
 
 const TOTAL_FLOORS = 8
-const SHAFT_HEIGHT = 400
-const CABIN_HEIGHT = 70
+const SHAFT_HEIGHT = 480
+const CABIN_HEIGHT = 60
 const MAX_BOTTOM = SHAFT_HEIGHT - CABIN_HEIGHT
 
 
@@ -20,7 +20,7 @@ export function Elevator({ floor, status }: Props) {
                 style={{ bottom: `${position}px` }}
             >
                 <div className="display" style={{ color: 'white' }}>
-                    {floor} | {status}
+                    {floor}
                 </div>
             </div>
         </div>

@@ -3,10 +3,12 @@ import { RedisService } from '../redis/redis.service';
 import { RedisProvider } from 'src/redis/redis.provider';
 
 export type DoorStatus = 'transição' | 'aberta' | 'fechada';
+export type DoorStatusButtom = 'ligado' | 'desligado'
 
 export interface DoorState {
     localidade: number;
     status: DoorStatus;
+    statusButton: DoorStatusButtom;
 }
 
 @Injectable()
@@ -18,6 +20,7 @@ export class DoorsService implements OnModuleInit {
             this.doors.push({
                 localidade: i,
                 status: 'fechada',
+                statusButton: 'desligado'
             });
         }
     };
@@ -77,6 +80,8 @@ export class DoorsService implements OnModuleInit {
 
     async pressButton(floor: number){
         console.log(`Botão pressionado no andar ${floor}. Chamando o elevador...`);
+        const door = this.doors[floor];
+        door.statusButton = 'ligado';
         await this.emitElevatorCall(floor);
         return { ok: true, "message": `Solicitado o elevador para o andar ${floor}` };
     }
@@ -84,6 +89,7 @@ export class DoorsService implements OnModuleInit {
     async openDoor(floor:number){
         const door = this.doors[floor];
         if(!door) return;
+        door.statusButton = 'desligado';
         if (door.status === 'aberta' || door.status === 'transição') return;
         await this.redis.publish(
             'doors:events',
