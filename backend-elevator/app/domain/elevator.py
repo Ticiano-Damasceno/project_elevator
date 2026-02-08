@@ -1,7 +1,8 @@
 import asyncio
 from pydantic import BaseModel
-from typing import Literal, List, Optional
+from typing import Literal, List, Optional, Callable, Awaitable, Dict
 
+CallSource = Literal['door', 'panel']
 Status = Literal['subindo', 'descendo', 'parado']
 
 class ElevatorState(BaseModel):
@@ -9,13 +10,22 @@ class ElevatorState(BaseModel):
     localidade: int = 0
 
 class Elevator:
-    def __init__(self) -> None:
+    def __init__(
+            self,
+            publisher: Optional[Callable[[dict], Awaitable[None]]] = None,
+            door_publisher: Optional[Callable[[dict], Awaitable[None]]] = None
+        ) -> None:
         self.state = ElevatorState()
-        self.calls: List[int] = []
+        self.calls: List[dict] = []
         self.__lock = asyncio.Lock()
-        self.__running_task = None
+        self.__task: asyncio.Task | None = None
+        self.call_event = asyncio.Event()
         self.hold_event = asyncio.Event()
         self.hold_event.set()
+        self.publisher = publisher
+        self.door_publisher = door_publisher
+        self.__task = asyncio.create_task(self._worker())
+        self.__next_floor: Optional[int] = None
 
     def get_status(self) -> dict:
         return {
@@ -24,16 +34,80 @@ class Elevator:
             'calls': self.calls
         }
 
-    async def add_call(self, floor: int, source: str) -> None:
-        async with self.__lock:
-            call = {'floor': floor, 'source': source}
-            if floor not in self.calls:
-                self.calls.append(call)
+    def _call_exists(self, floor: int, source: CallSource) -> bool:
+        return any(
+            c['floor'] == floor and c['source'] == source for c in self.calls
+        )
 
-    async def remove_call(self, floor: int) -> None:
+    async def call(self, floor: int, source: CallSource) -> bool:
         async with self.__lock:
-            if floor in self.calls:
-                self.calls.remove(floor)
+            if self._call_exists(floor, source):
+                return False
+            
+            self.calls.append({'floor':floor, 'source':source})
+            self.call_event.set()
+            return True
+
+    def pause(self):
+        print('Elevador parado - Porta Aberta')
+        self.hold_event.clear()
+
+    def resume(self):
+        print('Elevador continuado - Porta Fechada')
+        self.hold_event.set()
+
+    def is_running(self) -> bool:
+        return self.__task is not None and not self.__task.done()
+
+    async def _worker(self):
+        while True:
+            await self.call_event.wait()
+            self.call_event.clear()
+
+            while self.calls:
+                self.__next_floor = self.next_floor()
+                if self.__next_floor is None:
+                    self.state.status = 'parado'
+                    break
+                
+                print(self.__next_floor)
+                
+                await self.hold_event.wait()
+                print('self.__next_floor:',self.__next_floor)
+                if self.__next_floor > self.state.localidade:
+                    self.state.status = 'subindo'
+                    await self._publish('queue')
+                    await self.up()
+
+                elif self.__next_floor < self.state.localidade:
+                    self.state.status = 'descendo'
+                    await self._publish('queue')
+                    await self.down()
+
+                if self.__next_floor == self.state.localidade:
+                    # self.state.status = 'parado'
+                    self.hold_event.clear()
+                    print('Parado no andar', self.state.localidade)
+                    await self._publish('stop')
+                    await self._publish_door()
+
+                    await self.hold_event.wait()
+                    self.remove_call_at_floor(self.state.localidade)
+    
+    async def _publish(self, type_:str):
+        if self.publisher:
+            await self.publisher({
+                'type': type_,
+                'status': self.state.status,
+                'floor': self.state.localidade
+            })
+
+    async def _publish_door(self):
+        if self.door_publisher:
+            await self.door_publisher({
+                'type': 'open',
+                'floor': self.state.localidade
+            })
 
     async def up(self):
         if self.state.localidade == 7:
@@ -52,23 +126,64 @@ class Elevator:
         self.state.localidade -= 1
 
     def next_floor(self) -> Optional[int]:
-        current = self.state.localidade
-        upper = sorted(f for f in self.calls if f > current)
-        downner = sorted(f for f in self.calls if f < current)
         if not self.calls:
             return None
-        if self.state.status == 'subindo' and upper:
-            return upper[0]
-        elif self.state.status == 'descendo' and downner:
-            return downner[0]
+    
+        if self.state.status == 'parado':
+            
+            return min(
+                (c['floor'] for c in self.calls),
+                key = lambda f: abs(f - self.state.localidade)
+            )
+            
+        elif self.state.status == 'subindo':
+            return self._next_subindo()
 
-        return min(self.calls, key=lambda f: abs(f-current))
+        elif self.state.status == 'descendo':
+            return self._next_descendo()
+        
+        return None
+    
+    def _split_calls(self):
+        current = self.state.localidade
 
-    def get_running(self) -> bool:
-        return self.__running_task is not None and not self.__running_task.done()
+        acima_panel = []
+        acima_door = []
+        abaixo = []
 
-    def set_task(self, task) -> None:
-        self.__running_task = task
+        for c in self.calls:
+            if c['floor'] > current:
+                if c['source'] == 'panel':
+                    acima_panel.append(c['floor'])
+                else:
+                    acima_door.append(c['floor'])
+            elif c['floor'] < current:
+                abaixo.append(c['floor'])
 
-    def set_status_stop(self) -> None:
-        self.state.status = 'parado'
+        return acima_panel, acima_door, abaixo
+
+    def _next_subindo(self):
+        acima_panel, acima_door, _ = self._split_calls()
+
+        if acima_panel:
+            if min(acima_panel) == self.state.localidade:
+                return self.__next_floor
+            return min(acima_panel)        # crescente
+        if acima_door:
+            return max(acima_door)        # door em ordem decrescente
+
+        return None
+
+    def _next_descendo(self):
+        _, _, abaixo = self._split_calls()
+
+        if abaixo:
+            if max(abaixo) == self.state.localidade:
+                return self.__next_floor
+            return max(abaixo)            # decrescente
+
+        return None
+
+
+    def remove_call_at_floor(self, floor: int) -> None:
+        self.calls = [c for c in self.calls if c['floor'] != floor]

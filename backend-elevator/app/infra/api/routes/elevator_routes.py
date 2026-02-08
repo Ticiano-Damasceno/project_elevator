@@ -1,29 +1,24 @@
-import asyncio
-from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Request, HTTPException, status
 
-from ....application.handlers.handler_elevator import run_elevator
-
-router = APIRouter(prefix='/elevator')
+router = APIRouter(tags=['Elevator'])
 
 @router.get('/status')
-async def get_stats(request: Request):
+async def get_status(request: Request):
     elevator = request.app.state.elevator
     return elevator.get_status()
 
-@router.post('/call/{floor}')
+@router.post('/call/{floor}', status_code=status.HTTP_202_ACCEPTED)
 async def call_elevator(floor: int, request: Request):
     if floor < 0 or floor > 7:
-        return JSONResponse(status_code=400, content={'error': 'Andar inválido!'})
+        raise HTTPException(
+            status_code=400, 
+            detail='Andar inválido!'
+        )
     
     elevator = request.app.state.elevator
-    await elevator.add_call(floor)
-    
-    if not elevator.get_running():
-        asyncio.create_task(run_elevator(request))
+    await elevator.call(floor, 'panel')
     
     return {
             'OK': True,
-            'fila': elevator.calls,
-            'localidade_atual': elevator.state.localidade
+            'floor_called': floor
     }

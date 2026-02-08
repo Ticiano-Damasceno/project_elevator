@@ -19,7 +19,7 @@ export default function App() {
 
     return () => clearInterval(interval)
   }, [])
-
+  
   if (!elevator) return null
 
   return (
