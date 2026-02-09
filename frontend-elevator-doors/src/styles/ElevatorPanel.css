@@ -23,3 +23,8 @@
 .panel button:hover{
     background: #1f5fa0;
 }
+
+.panel button.ligado{
+    background: #e6f0ff;
+    color: #0f2a4d;
+}

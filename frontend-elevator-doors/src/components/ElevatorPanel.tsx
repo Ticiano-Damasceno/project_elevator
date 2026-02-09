@@ -1,16 +1,14 @@
-import { callElevator } from "../api/elevator";
-import '../styles/ElevatorPanel.css'
+import '../styles/ElevatorPanel.css';
+import { ReactNode } from 'react';
 
 type Props = {
-    floors: number[]
+    children: ReactNode
 }
 
-export function ElevatorPanel({ floors }: Props) {
+export function ElevatorPanel({ children }: Props) {
     return (
-        <div className="panel">
-            {floors.map (f => (
-                <button key={f} onClick={() => callElevator(f)} >{f}</button>
-            ))}
+        <div className="panel">            
+            {children}
         </div>
     )
 }
