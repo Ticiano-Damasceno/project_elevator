@@ -1,6 +1,6 @@
 import type { Door } from "../types/door";
 
-const BASE_URL = import.meta.env.VITE_DOORS_API
+const BASE_URL = '/api/doors/'
 
 export async function getDoors(): Promise<Door[]> {
     const res = await fetch(`${BASE_URL}/doors/`)

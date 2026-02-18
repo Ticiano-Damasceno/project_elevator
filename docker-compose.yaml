@@ -10,8 +10,6 @@ services:
     build: ./backend-elevator
     container_name: elevator_backend
     restart: always
-    ports:
-      - "8000:8000"
     depends_on:
       - redis
     environment:
@@ -23,8 +21,6 @@ services:
     build: ./backend-doors
     container_name: doors-backend
     restart: always
-    ports:
-      - "3000:3000"
     depends_on:
       - redis
     environment:

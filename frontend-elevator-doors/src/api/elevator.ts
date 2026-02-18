@@ -1,6 +1,6 @@
 import type { ElevatorStatus } from "../types/elevator";
 
-const BASE_URL = import.meta.env.VITE_ELEVATOR_API
+const BASE_URL = '/api/elevator'
 
 export async function getElevatorStatus(): Promise<ElevatorStatus> {
     const res = await fetch(`${BASE_URL}/elevator/status`)
