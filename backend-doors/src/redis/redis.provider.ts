@@ -1,25 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
-import { getDokcerIp } from '../utils/getDockerIp';
 
 @Injectable()
 export class RedisProvider{
-    public client: Redis;
-    private ip: string;
-
     public pub: Redis;
     public sub: Redis;
 
     constructor(){
-        this.ip = getDokcerIp();
-        this.pub = new Redis({
-            host: process.env.REDIS_HOST || this.ip,
-            port: 6379,
-        });
-        this.sub = new Redis({
-            host: process.env.REDIS_HOST || this.ip,
-            port: 6379,
-        });
+        const host = process.env.REDIS_HOST || 'localhost';
+        const port = Number(process.env.REDIS_PORT) || 6379;
+
+        this.pub = new Redis({ host, port});
+        this.sub = new Redis({ host, port});
     }
 
     publish(channel: string, message: any){

@@ -11,10 +11,13 @@ from ..domain.elevator import Elevator
 
 load_dotenv()
 
-DOORS_EVENTS_CHANNEL = os.getenv('DOORS_EVENTS_CHANNEL')
-DOORS_COMMAND_CHANNEL = os.getenv('DOORS_COMMAND_CHANNEL')
-ELEVATOR_COMMAND_CHANNEL = os.getenv('ELEVATOR_COMMAND_CHANNEL')
-ELEVATOR_EVENTS_CHANNEL = os.getenv('ELEVATOR_EVENTS_CHANNEL')
+host = os.getenv("REDIS_HOST", "localhost")
+port = int(os.getenv("REDIS_PORT", 6379))
+
+DOORS_EVENTS_CHANNEL = os.getenv('DOORS_EVENTS_CHANNEL', 'doors:events')
+DOORS_COMMAND_CHANNEL = os.getenv('DOORS_COMMAND_CHANNEL', 'doors:commands')
+ELEVATOR_COMMAND_CHANNEL = os.getenv('ELEVATOR_COMMAND_CHANNEL', 'elevator:commands')
+ELEVATOR_EVENTS_CHANNEL = os.getenv('ELEVATOR_EVENTS_CHANNEL', 'elevator:events')
 
 assert DOORS_EVENTS_CHANNEL , 'DOORS_EVENTS_CHANNEL not set'
 assert DOORS_COMMAND_CHANNEL , 'DOORS_COMMAND_CHANNEL not set'
@@ -26,7 +29,7 @@ assert ELEVATOR_EVENTS_CHANNEL , 'ELEVATOR_EVENTS_CHANNEL not set'
 async def lifespan(app: FastAPI):
     
     redis_client: Redis
-    redis_client = create_redis()
+    redis_client = create_redis(host, port)
     app.state.redis_client = redis_client
 
     async def elevator_publisher(event: dict):

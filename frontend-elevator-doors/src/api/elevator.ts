@@ -1,12 +1,14 @@
 import type { ElevatorStatus } from "../types/elevator";
 
+const BASE_URL = import.meta.env.VITE_ELEVATOR_API
+
 export async function getElevatorStatus(): Promise<ElevatorStatus> {
-    const res = await fetch('http://localhost:8000/elevator/status')
+    const res = await fetch(`${BASE_URL}/elevator/status`)
     return res.json()
 };
 
 export async function callElevator(floor: number) {
-    await fetch(`http://localhost:8000/elevator/call/${floor}`,
+    await fetch(`${BASE_URL}/elevator/call/${floor}`,
         { method: 'POST' },
     )
 };

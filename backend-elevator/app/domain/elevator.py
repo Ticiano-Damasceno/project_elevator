@@ -70,10 +70,7 @@ class Elevator:
                     self.state.status = 'parado'
                     break
                 
-                print(self.__next_floor)
-                
                 await self.hold_event.wait()
-                print('self.__next_floor:',self.__next_floor)
                 if self.__next_floor > self.state.localidade:
                     self.state.status = 'subindo'
                     await self._publish('queue')

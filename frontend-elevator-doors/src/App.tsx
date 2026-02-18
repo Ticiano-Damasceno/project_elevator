@@ -7,9 +7,11 @@ import { Door } from "./components/Door";
 import { ElevatorPanel } from "./components/ElevatorPanel";
 import './styles/global.css'
 import ElevatorButton from "./components/ElevatorButton";
+import type { ElevatorStatus } from "./types/elevator";
+
 
 export default function App() {
-  const [elevator, setElevator] = useState<any>(null)
+  const [elevator, setElevator] = useState< ElevatorStatus | null >(null)
   const [doors, setDoors] = useState<any[]>([])
   const panelCalls = new Set<number>();
   const floors = [0, 1, 2, 3, 4, 5, 6, 7];

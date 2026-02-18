@@ -41,8 +41,8 @@ pnpm-debug.log*
 
 # Build React
 
-frontend/build/
-frontend/dist/
+frontend-elevator-doors/build/
+frontend-elevator-doors/dist/
 
 # ========================
 

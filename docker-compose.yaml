@@ -1,0 +1,49 @@
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    networks:
+      - elevator-net
+  
+  elevator-backend:
+    build: ./backend-elevator
+    container_name: elevator_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+    networks:
+      - elevator-net
+
+  doors-backend:
+    build: ./backend-doors
+    container_name: doors-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+    networks:
+      - elevator-net
+
+  frontend:
+    build: ./frontend-elevator-doors
+    container_name: elevator-frontend
+    restart: always
+    ports:
+      - "4000:80"
+    depends_on:
+      - elevator-backend
+      - doors-backend
+    networks:
+      - elevator-net
+
+networks:
+  elevator-net:
+    driver: bridge
