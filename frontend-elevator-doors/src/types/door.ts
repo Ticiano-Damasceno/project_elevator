@@ -1,4 +1,5 @@
-export type Door ={
+export type Door_type ={
     localidade: number
-    status: 'aberta' | 'fechada' | 'transição'
+    status: 'aberta' | 'fechada'
+    statusButton: 'ligado' | 'desligado'
 }

@@ -1,39 +1,64 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getElevatorStatus } from "./api/elevator";
 import { getDoors } from "./api/doors";
 import { Elevator } from "./components/Elevator";
 import { ElevatorDisplay } from "./components/ElevatorDisplay";
-import { Door } from "./components/Door";
 import { ElevatorPanel } from "./components/ElevatorPanel";
+import { Door } from "./components/Door";
 import './styles/global.css'
 import ElevatorButton from "./components/ElevatorButton";
 import type { ElevatorStatus } from "./types/elevator";
+import type { Door_type } from "./types/door";
 
 
 export default function App() {
-  const [elevator, setElevator] = useState< ElevatorStatus | null >(null)
-  const [doors, setDoors] = useState<any[]>([])
-  const panelCalls = new Set<number>();
+  const [elevator, setElevator] = useState< ElevatorStatus | null >(null);
+  const [doors, setDoors] = useState<Door_type[]>([]);
+  const panelCalls = useMemo(() => {
+    const set = new Set<Number>();
+    elevator?.calls.forEach((c:any)=>{
+      if (c.source === 'panel') set.add(c.floor);
+    });
+    return set;
+  }, [elevator]);
   const floors = [0, 1, 2, 3, 4, 5, 6, 7];
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      setElevator(await getElevatorStatus())
-      setDoors(await getDoors())
-    }, 1000)
+    let isMounted = true;
 
-    return () => clearInterval(interval)
-  }, [])
+    const fetchData = async () => {
+      try {
+        const [elevatorData, doorsData] = await Promise.all([
+          getElevatorStatus(),
+          getDoors()
+        ]);
+
+        if (isMounted){
+          setElevator(elevatorData);
+          setDoors(doorsData);
+        };
+      } catch (err) {
+        console.error("Erro ao buscar dados", err);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 1000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   if (!elevator) return null;
 
-  elevator.calls.forEach((c: any) => {
-    if (c.source === 'panel') { panelCalls.add(c.floor) }
-  });
+  const currentDoor = doors.find(d => d.localidade === elevator.locate);
+  console.log(currentDoor);
 
   return (
     <div style={{ display: 'flex', gap: 40 }} >
-      <Elevator floor={elevator.locate} status={elevator.status} />
+      <Elevator floor={elevator.locate} status={elevator.status} doorStatus={currentDoor?.status ?? 'fechada'} />
       <div>
         <ElevatorDisplay
           status={elevator.status}

@@ -1,0 +1,39 @@
+.door-container {
+    position: relative;
+    width: 50px;
+    height: 60px;
+    background: #111;
+    overflow: hidden;
+    border: 1px solid #999;
+}
+
+.door-panel {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        #888,#bbb, #888
+    );
+    transition: transform 1.2s ease-in-out;
+}
+
+.door-panel.left{
+    left:0;
+    transform-origin: left;
+}
+
+.door-panel.left.open{
+    transform: scaleX(0);
+}
+
+.door-panel.right {
+    right: 0;
+    transform-origin: right;
+}
+
+.door-panel.right.open{
+    transform: scaleX(0);
+}
+

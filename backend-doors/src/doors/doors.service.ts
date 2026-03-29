@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { RedisProvider } from 'src/redis/redis.provider';
 
-export type DoorStatus = 'transição' | 'aberta' | 'fechada';
+export type DoorStatus = 'aberta' | 'fechada';
 export type DoorStatusButtom = 'ligado' | 'desligado'
 
 export interface DoorState {
@@ -90,7 +90,7 @@ export class DoorsService implements OnModuleInit {
         const door = this.doors[floor];
         if(!door) return;
         door.statusButton = 'desligado';
-        if (door.status === 'aberta' || door.status === 'transição') return;
+        if (door.status === 'aberta') return;
         await this.redis.publish(
             'doors:events',
             {
@@ -100,7 +100,6 @@ export class DoorsService implements OnModuleInit {
             }
         );
         console.log(`Porta ${floor}: iniciando abertura...`);
-        door.status = 'transição';
         await this.wait(2000);
         door.status = 'aberta';
         console.log(`Porta ${floor}: aberta.`);
@@ -109,9 +108,8 @@ export class DoorsService implements OnModuleInit {
     async closeDoor(floor:number){
         const door = this.doors[floor];
         if(!door) return;
-        if (door.status === 'fechada' || door.status === 'transição') return;
+        if (door.status === 'fechada') return;
         console.log(`Porta ${floor}: iniciando fechamento...`);
-        door.status = 'transição';
         await this.wait(2000);
         door.status = 'fechada';
         console.log(`Porta ${floor}: fechada.`);
@@ -136,9 +134,6 @@ export class DoorsService implements OnModuleInit {
                 await this.openDoor(floor);
                 await this.wait(6000);
                 return this.closeDoor(floor);
-            case 'transição':
-                console.log(`Porta ${floor} em transição. Comando ignorado.`)
-                return;
         }
 
     }

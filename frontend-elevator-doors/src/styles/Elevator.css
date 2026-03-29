@@ -1,7 +1,7 @@
 .elevator-shaft {
     position: relative;
     height: 480px;
-    width: 62px;
+    width: 52px;
     border: 2px solid #1e3a5f;
     background: repeating-linear-gradient(
         to top,
@@ -14,7 +14,7 @@
 
 .elevator-box { 
     position: absolute;
-    width: 60px;
+    width: 50px;
     height: 60px;
     background: #1e4a7a;
     border: 1px solid #e6f0ff;
